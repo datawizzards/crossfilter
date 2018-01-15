@@ -1,65 +1,80 @@
 <!doctype html>
 <html>
-    <head>
-        <title>Testing Crossfilter Sum</title>
-    </head>
-    <body>
-		Total Number:
-        <div id="sum"></div>
-		FPR:
-        <div id="fpr"></div>
-		<script src="d3.min.js"></script>
-		<script src="crossfilter.min.js"></script>
-		<script src="dc.min.js"></script>
-        <script>
-            var payments = crossfilter([
-			  {date: "2011-11-14T16:17:54Z", quantity: 2, total: 190, tip: 100, type: "tab"},
-			  {date: "2011-11-14T16:20:19Z", quantity: 2, total: 190, tip: 100, type: "tab"},
-			  {date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa"},
-			  {date: "2011-11-14T16:30:43Z", quantity: 2, total: 90, tip: 0, type: "tab"},
-			  {date: "2011-11-14T16:48:46Z", quantity: 2, total: 90, tip: 0, type: "tab"},
-			  {date: "2011-11-14T16:53:41Z", quantity: 2, total: 90, tip: 0, type: "tab"},
-			  {date: "2011-11-14T16:54:06Z", quantity: 1, total: 100, tip: 0, type: "cash"},
-			  {date: "2011-11-14T16:58:03Z", quantity: 2, total: 90, tip: 0, type: "tab"},
-			  {date: "2011-11-14T17:07:21Z", quantity: 2, total: 90, tip: 0, type: "tab"},
-			  {date: "2011-11-14T17:22:59Z", quantity: 2, total: 90, tip: 0, type: "tab"},
-			  {date: "2011-11-14T17:25:45Z", quantity: 2, total: 200, tip: 0, type: "cash"},
-			  {date: "2011-11-14T17:29:52Z", quantity: 1, total: 200, tip: 100, type: "visa"}
-			]);
 
-            function reduceAdd(p, v) {
-                p.total += v.total;
-                p.tip += v.tip;
-                return p;
-            }
+<head>
+	<title>Testing Crossfilter Sum</title>
+</head>
 
-            function reduceRemove(p, v) {
-                p.total -= v.total;
-                p.tip -= v.tip;
-                return p;
-            }
+<body>
+	Total Number:
+	<div id="sum"></div>
+	FPR:
+	<div id="fpr"></div>
+	<div id="type"></div>
+	<script src="d3.min.js"></script>
+	<script src="crossfilter.min.js"></script>
+	<script src="dc.min.js"></script>
+	<script>
+		var payments = crossfilter([
+			{ date: "2011-11-14T16:17:54Z", quantity: 2, total: 190, tip: 100, type: "tab" },
+			{ date: "2011-11-14T16:20:19Z", quantity: 2, total: 190, tip: 100, type: "tab" },
+			{ date: "2011-11-14T16:28:54Z", quantity: 1, total: 300, tip: 200, type: "visa" },
+			{ date: "2011-11-14T16:30:43Z", quantity: 2, total: 90, tip: 0, type: "tab" },
+			{ date: "2011-11-14T16:48:46Z", quantity: 2, total: 90, tip: 0, type: "tab" },
+			{ date: "2011-11-14T16:53:41Z", quantity: 2, total: 90, tip: 0, type: "tab" },
+			{ date: "2011-11-14T16:54:06Z", quantity: 1, total: 100, tip: 0, type: "cash" },
+			{ date: "2011-11-14T16:58:03Z", quantity: 2, total: 90, tip: 0, type: "tab" },
+			{ date: "2011-11-14T17:07:21Z", quantity: 2, total: 90, tip: 0, type: "tab" },
+			{ date: "2011-11-14T17:22:59Z", quantity: 2, total: 90, tip: 0, type: "tab" },
+			{ date: "2011-11-14T17:25:45Z", quantity: 2, total: 200, tip: 0, type: "cash" },
+			{ date: "2011-11-14T17:29:52Z", quantity: 1, total: 200, tip: 100, type: "visa" }
+		]);
 
-            function reduceInitial() {
-                return {tip: 0, total: 0};
-            }
+		function reduceAdd(p, v) {
+			p.total += v.total;
+			p.tip += v.tip;
+			return p;
+		}
 
-            var fprGroup = payments.groupAll().reduce(reduceAdd, reduceRemove, reduceInitial);
-			var paymentSumGroup = payments.groupAll().reduceSum(function(d){return d.total;});
-			
-			var totalSum = dc.numberDisplay("#sum"); 
-		    totalSum
-				.formatNumber(d3.format("d"))
-				.valueAccessor(function(d){return d; })
-				.group(paymentSumGroup)
-				.formatNumber(d3.format(".3s"));	
+		function reduceRemove(p, v) {
+			p.total -= v.total;
+			p.tip -= v.tip;
+			return p;
+		}
 
-			var fprSum = dc.numberDisplay("#fpr"); 
-		    fprSum
-				.formatNumber(d3.format("d"))
-				.valueAccessor(function(d){return d.tip / d.total; })
-				.group(fprGroup)
-				.formatNumber(d3.format(".3s"));	
-			dc.renderAll();
-       </script>
-    </body>
+		function reduceInitial() {
+			return { tip: 0, total: 0 };
+		}
+
+		var fprGroup = payments.groupAll().reduce(reduceAdd, reduceRemove, reduceInitial);
+		var paymentSumGroup = payments.groupAll().reduceSum(function (d) { return d.total; });
+
+		typeDim = payments.dimension(function (d) { return d.type });
+		typeGroup = typeDim.group();
+
+		var totalSum = dc.numberDisplay("#sum");
+		totalSum
+			.formatNumber(d3.format("d"))
+			.valueAccessor(function (d) { return d; })
+			.group(paymentSumGroup)
+			.formatNumber(d3.format(".3s"));
+
+		var fprSum = dc.numberDisplay("#fpr");
+		fprSum
+			.formatNumber(d3.format("d"))
+			.valueAccessor(function (d) { return d.tip / d.total; })
+			.group(fprGroup)
+			.formatNumber(d3.format(".3s"));
+
+		var typeChart = dc.pieChart("#type");
+		typeChart
+			.width(200)
+			.height(200)
+			.dimension(typeDim)
+			.group(typeGroup)
+			.innerRadius(10);
+		dc.renderAll();
+	</script>
+</body>
+
 </html>
